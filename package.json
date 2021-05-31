@@ -1,0 +1,60 @@
+{
+  "name": "psg-backend",
+  "version": "0.0.1",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@elastic/elasticsearch": "^7.8.0",
+    "@sentry/node": "^5.12.0",
+    "axios": "^0.18.1",
+    "axios-retry": "^3.1.2",
+    "body-parser": "1.19.0",
+    "config": "^3.2.2",
+    "dotenv": "^8.2.0",
+    "express": "4.16.4",
+    "full-icu": "^1.3.0",
+    "js-yaml": "^3.13.1",
+    "moment-timezone": "^0.5.28",
+    "node-cache": "^5.1.0",
+    "parse": "2.7.1",
+    "parse-dashboard": "2.0.3",
+    "parse-server": "^4.5.0",
+    "request-ip": "^2.1.3",
+    "stripe": "7.13.0",
+    "winston": "^3.3.3",
+    "word-wrap": "^1.2.3",
+    "jsonwebtoken": "8.5.1",
+    "jwk-to-pem": "2.0.5"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.2.2",
+    "@babel/preset-env": "^7.3.1",
+    "babel-loader": "^8.0.5",
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "chai-http": "^4.3.0",
+    "faker": "^4.1.0",
+    "jsdoc": "^3.6.3",
+    "minami": "^1.2.3",
+    "mocha": "^6.2.1",
+    "mongodb-memory-server": "^6.0.1",
+    "nock": "^11.4.0",
+    "nodemon": "^1.19.1",
+    "rewire": "^5.0.0",
+    "sinon": "^7.5.0"
+  },
+  "scripts": {
+    "docs": "./node_modules/.bin/jsdoc --configure .jsdoc.json",
+    "local": "python local-mongo-db.sh start && node src/index.js",
+    "dev": "NODE_ENV=dev node src/index.js",
+    "start": "node --icu-data-dir=node_modules/full-icu src/index.js",
+    "test-watch": "NODE_ENV=integration-test mocha tests -b --exit",
+    "test-one": "mocha tests --recursive -b --exit -g",
+    "test": "mocha tests -b --recursive --exit"
+  },
+  "config": {
+    "mongodbMemoryServer": {
+      "version": "4.2.0"
+    }
+  }
+}

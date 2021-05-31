@@ -1,0 +1,24 @@
+version: "3"
+
+volumes:
+  mongo_data: {}
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: ./compose/app/Dockerfile
+    depends_on:
+      - mongodb
+    env_file:
+        .env
+    command: npm run start
+    ports:
+      - 9999:9999
+
+  mongodb:
+    image: mongo:latest
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - 27017:27017
