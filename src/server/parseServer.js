@@ -25,7 +25,8 @@ function parseOptions() {
         expireInactiveSessions: expireInactiveSessions,
         serverStartComplete: async () => {
             await buildSchemas([User, Table, Field]);
-        }
+        },
+        logLevel: 'VERBOSE'
     };
 
     if (["production", "staging"].indexOf(config.parse.env) > -1) {

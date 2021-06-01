@@ -45,7 +45,7 @@ const Table = {
         name: { type: "String" }
     },
     indexes: {
-        objectId: { objectId: 1 }
+        objectId: { objectId: 1 },
     },
     classLevelPermissions: {
         find: { "role:Admin": true },
