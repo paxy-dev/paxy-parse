@@ -50,3 +50,4 @@ config/production.yml
 
 *.sh
 keys/
+tmp/

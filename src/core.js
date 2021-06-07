@@ -1,3 +1,8 @@
+const fs = require("fs");
+const path = require("path");
+const prettier = require("prettier");
+const { plural } = require("pluralize");
+
 const createSchemaData = (tableName, fields) => {
     const className = tableName;
     data = {};
@@ -56,4 +61,98 @@ const getTableData = async () => {
     return tables;
 };
 
-module.exports = { getTableData, createSchemaData };
+class PageCodeGenerator {
+    constructor(table, fields, dir) {
+        this.dir = dir;
+        this.table = table;
+        this.fields = fields;
+        this.plur = plural(table.toLowerCase());
+    }
+
+    createFieldItem(field) {
+        const { objectId, createdAt, updatedAt, ...others } = field;
+        return others;
+    }
+
+    createFields() {
+        let items = this.fields.map(i => this.createFieldItem(i));
+        items = JSON.stringify(items);
+        let text = `import React from 'react';
+
+        export const requestFields = ${items}
+
+        export const updateRequestFields = [
+            { name: 'id', required: true, type: 'string', disabled: true },
+            ...requestFields,
+        ];
+          
+        export const tableFields = [
+            ...updateRequestFields,
+            { name: 'createdAt', required: true, type: 'date', disabled: true },
+            { name: 'updatedAt', required: true, type: 'date', disabled: true },
+        ];
+        `;
+        return text;
+    }
+
+    createIndex() {
+        let text = `import { createTable } from 'paxy-ui';
+        import { Services } from '../../core/service';
+        
+        import { requestFields, updateRequestFields, tableFields } from './fields';
+        
+        const services = new Services('${this.table}', tableFields, {});
+        
+        const TableList = createTable(
+          '${this.table}',
+          null,
+          requestFields,
+          updateRequestFields,
+          tableFields,
+          services,
+        );
+        
+        export default TableList;`;
+
+        return text;
+    }
+
+    createMock() {
+        let text = `import { MockBackend, ItemList } from 'paxy-ui';
+        import { tableFields } from './fields';
+        
+        const items = new ItemList();
+        items.init(tableFields, 3);
+        
+        const mock = new MockBackend(items, '${this.plur}');
+        const apis = mock.api();
+        
+        export default apis;`;
+        return text
+    }
+
+    create() {
+        const mockText = this.createMock();
+        const fieldsText = this.createFields();
+        const indexText = this.createIndex();
+
+        const map = {
+            "_mock.ts": mockText,
+            "fieds.tsx": fieldsText,
+            "index.tsx": indexText
+        };
+
+        const pagesPath = path.join(this.dir, this.table);
+        if (!fs.existsSync(pagesPath)) {
+            fs.mkdirSync(pagesPath);
+        }
+
+        for (const [key, value] of Object.entries(map)) {
+
+            const text = prettier.format(value);
+            fs.writeFileSync(path.join(pagesPath, key), text);
+        };
+    }
+}
+
+module.exports = { getTableData, createSchemaData, PageCodeGenerator };
