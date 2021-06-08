@@ -128,7 +128,7 @@ class PageCodeGenerator {
         const apis = mock.api();
         
         export default apis;`;
-        return text
+        return text;
     }
 
     create() {
@@ -148,11 +148,43 @@ class PageCodeGenerator {
         }
 
         for (const [key, value] of Object.entries(map)) {
-
             const text = prettier.format(value);
             fs.writeFileSync(path.join(pagesPath, key), text);
-        };
+        }
     }
 }
 
-module.exports = { getTableData, createSchemaData, PageCodeGenerator };
+class MenuCodeGenerator {
+    constructor(tables, dir) {
+        this.dir = dir;
+        this.tables = tables;
+    }
+
+    create() {
+        const items = this.tables.map(i => {
+            const plur = plural(i.toLowerCase());
+            return {
+                name: i,
+                path: `/${plur}`,
+                component: `/${plur}`
+            };
+        });
+        let text = JSON.stringify(items);
+        text = `export default ${text}`
+
+        const pagesPath = path.join(this.dir, 'config');
+        if (!fs.existsSync(pagesPath)) {
+            fs.mkdirSync(pagesPath);
+        }
+
+        text = prettier.format(text);
+        fs.writeFileSync(path.join(pagesPath, 'appRoutes.ts'), text);
+    }
+}
+
+module.exports = {
+    getTableData,
+    createSchemaData,
+    PageCodeGenerator,
+    MenuCodeGenerator
+};

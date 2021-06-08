@@ -5,7 +5,7 @@ const util = require("util");
 const path = require("path");
 const prettier = require("prettier");
 const exec = util.promisify(require("child_process").exec);
-const { getTableData, PageCodeGenerator } = require("../src/core");
+const { getTableData, PageCodeGenerator, MenuCodeGenerator } = require("../src/core");
 const dir = "./tmp";
 
 const expect = chai.expect;
@@ -82,7 +82,10 @@ describe("Test deploy", () => {
         generator.create();
         expect(fs.existsSync(path.join(dir, "Subject", "index.tsx"))).to.be
             .true;
-        // text = prettier.format(text);
-        // fs.writeFileSync('./tmp/page.js', text);
     });
+    it('shall create config routes page', async () => {
+        const generator = new MenuCodeGenerator(["Subject", "Samples", "Box"], dir);
+        generator.create();
+        expect(fs.existsSync(path.join(dir, 'config', 'appRoutes.ts'))).to.be.true;
+    })
 });
