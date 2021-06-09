@@ -22,7 +22,10 @@ if (process.env.NODE_ENV !== "production") {
 var config = {};
 
 config.app = {
-    name: envSource.APP_NAME
+    name: envSource.APP_NAME,
+    app_deployment_type: envSource.APP_DEPLOYMENT_TYPE,
+    app_routes_path: envSource.APP_ROUTES_PATH,
+    app_page_path: envSource.APP_PAGES_PATH
 };
 
 config.parse = {

@@ -5,7 +5,8 @@ const util = require("util");
 const path = require("path");
 const prettier = require("prettier");
 const exec = util.promisify(require("child_process").exec);
-const { getTableData, PageCodeGenerator, MenuCodeGenerator } = require("../src/core");
+const { getTableData, PageCodeGenerator, MenuCodeGenerator, AppCodeGenerator } = require("../src/core");
+const config = require("../src/config");
 const dir = "./tmp";
 
 const expect = chai.expect;
@@ -36,6 +37,14 @@ describe("Test deploy", () => {
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir);
         }
+
+        if (!fs.existsSync(config.app.app_page_path)) {
+            fs.mkdirSync(config.app.app_page_path)
+        }
+
+        if (!fs.existsSync(config.app.app_routes_path)) {
+            fs.mkdirSync(config.app.app_routes_path)
+        }
     });
     afterEach(async () => {
         const tableSchema = new Parse.Schema("Table");
@@ -57,6 +66,8 @@ describe("Test deploy", () => {
         }
 
         fs.rmdirSync(dir, { recursive: true });
+        fs.rmdirSync(config.app.app_page_path, { recursive: true });
+        fs.rmdirSync(config.app.app_routes_path, { recursive: true });
     });
     it("shall create deploy folder", async () => {
         //await exec('git clone git@github.com:paxy-dev/paxy-antd.git ./tmp/paxy-antd');
@@ -87,5 +98,24 @@ describe("Test deploy", () => {
         const generator = new MenuCodeGenerator(["Subject", "Samples", "Box"], dir);
         generator.create();
         expect(fs.existsSync(path.join(dir, 'config', 'appRoutes.ts'))).to.be.true;
+    })
+    it('sahll create app code', async () => {
+        const table = new Table();
+        table.set("name", "Subject");
+        await table.save(null, { sessionToken: token });
+
+        const field = new Field();
+        field.set("table", table);
+        field.set("name", "subjectNo");
+        field.set("type", "String");
+        await field.save(null, { sessionToken: token });
+
+        const data = await getTableData();
+
+        const gen = new AppCodeGenerator(path.join(dir, 'dst'));
+        gen.create(data);
+        gen.deploy('docker');
+        expect(fs.existsSync(config.app.app_routes_path)).to.be.true;
+        expect(fs.existsSync(path.join(config.app.app_page_path, 'Subject'))).to.be.true;
     })
 });

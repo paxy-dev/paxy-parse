@@ -51,3 +51,5 @@ config/production.yml
 *.sh
 keys/
 tmp/
+shared/
+paxy_app_dst/

@@ -1,12 +1,16 @@
+const os = require("os");
 const fs = require("fs");
+const { copySync } = require("fs-extra");
 const path = require("path");
 const prettier = require("prettier");
 const { plural } = require("pluralize");
 
+const config = require("./config");
+
 const createSchemaData = (tableName, fields) => {
     const className = tableName;
     data = {};
-    fields.forEach(i => {
+    fields.forEach((i) => {
         data[i.name] = { type: i.type };
     });
 
@@ -15,16 +19,16 @@ const createSchemaData = (tableName, fields) => {
         fields: {
             objectId: { type: "String" },
             createdAt: {
-                type: "Date"
+                type: "Date",
             },
             updatedAt: {
-                type: "Date"
+                type: "Date",
             },
             ACL: { type: "ACL" },
-            ...data
+            ...data,
         },
         indexes: {
-            objectId: { objectId: 1 }
+            objectId: { objectId: 1 },
         },
         classLevelPermissions: {
             find: { "role:Admin": true },
@@ -35,9 +39,9 @@ const createSchemaData = (tableName, fields) => {
             delete: { "role:Admin": true },
             addField: {},
             protectedFields: {
-                "role:Admin": []
-            }
-        }
+                "role:Admin": [],
+            },
+        },
     };
     return schemaData;
 };
@@ -54,7 +58,7 @@ const getTableData = async () => {
         } else {
             tables[table.name] = {
                 meta: {},
-                fields: [others]
+                fields: [others],
             };
         }
     }
@@ -75,7 +79,7 @@ class PageCodeGenerator {
     }
 
     createFields() {
-        let items = this.fields.map(i => this.createFieldItem(i));
+        let items = this.fields.map((i) => this.createFieldItem(i));
         items = JSON.stringify(items);
         let text = `import React from 'react';
 
@@ -139,7 +143,7 @@ class PageCodeGenerator {
         const map = {
             "_mock.ts": mockText,
             "fieds.tsx": fieldsText,
-            "index.tsx": indexText
+            "index.tsx": indexText,
         };
 
         const pagesPath = path.join(this.dir, this.table);
@@ -161,24 +165,73 @@ class MenuCodeGenerator {
     }
 
     create() {
-        const items = this.tables.map(i => {
+        const items = this.tables.map((i) => {
             const plur = plural(i.toLowerCase());
             return {
                 name: i,
                 path: `/${plur}`,
-                component: `/${plur}`
+                component: `/${plur}`,
             };
         });
         let text = JSON.stringify(items);
-        text = `export default ${text}`
+        text = `export default ${text}`;
 
-        const pagesPath = path.join(this.dir, 'config');
+        const pagesPath = path.join(this.dir, "config");
         if (!fs.existsSync(pagesPath)) {
             fs.mkdirSync(pagesPath);
         }
 
         text = prettier.format(text);
-        fs.writeFileSync(path.join(pagesPath, 'appRoutes.ts'), text);
+        fs.writeFileSync(path.join(pagesPath, "appRoutes.ts"), text);
+    }
+}
+
+class AppCodeGenerator {
+    constructor(dir) {
+        this.dir = dir;
+    }
+
+    create(tableData) {
+        if (fs.existsSync(this.dir)) {
+            fs.rmdirSync(this.dir, { recursive: true });
+        }
+
+        fs.mkdirSync(this.dir);
+
+        const tables = [];
+        Object.keys(tableData).forEach((key) => {
+            const gen = new PageCodeGenerator(
+                key,
+                tableData[key].fields,
+                this.dir
+            );
+            gen.create();
+            tables.push(key);
+        });
+        const gen = new MenuCodeGenerator(tables, this.dir);
+        gen.create();
+    }
+
+    deploy(type) {
+        switch (type) {
+            case 'docker':
+                fs.copyFileSync(
+                    path.join(this.dir, "config", "appRoutes.ts"),
+                    path.join(config.app.app_routes_path, "appRoutes.ts")
+                );
+                fs.readdirSync(this.dir).forEach((f) => {
+                    const stat = fs.lstatSync(path.join(this.dir, f));
+                    if (f !== "config" && stat.isDirectory()) {
+                        copySync(
+                            path.join(this.dir, f),
+                            path.join(config.app.app_page_path, f)
+                        );
+                    }
+                });
+                break;
+            default:
+                throw Error(`Invalid deploy type: ${type}`);
+        }
     }
 }
 
@@ -186,5 +239,6 @@ module.exports = {
     getTableData,
     createSchemaData,
     PageCodeGenerator,
-    MenuCodeGenerator
+    MenuCodeGenerator,
+    AppCodeGenerator,
 };
