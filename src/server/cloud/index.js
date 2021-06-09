@@ -1,7 +1,11 @@
 const jwt = require("jsonwebtoken");
 const jwkToPem = require("jwk-to-pem");
 const config = require("../../config");
-const { createSchemaData, getTableData } = require("../../core");
+const {
+    createSchemaData,
+    getTableData,
+    AppCodeGenerator
+} = require("../../core");
 const { buildSchemas } = require("../buildSchema");
 
 const Table = Parse.Object.extend("Table");
@@ -29,6 +33,36 @@ Parse.Cloud.beforeSave("Field", async request => {
             throw Error("Key exists");
         }
     }
+});
+
+Parse.Cloud.define("deployAppCode", async request => {
+    const roles = await new Parse.Query(Parse.Role)
+        .equalTo("users", request.user)
+        .find({ useMasterKey: true });
+    let validUser = false;
+    for (let r of roles) {
+        if (r.get("name") === "Admin") {
+            validUser = true;
+            break;
+        }
+    }
+
+    const res = {};
+    if (validUser) {
+        const data = await getTableData();
+        const gen = new AppCodeGenerator();
+        console.log('k1');
+        gen.create(data);
+        console.log('k2');
+        gen.deploy(config.app.app_deployment_type);
+        gen.clean();
+        res.error = false;
+        res.message = 'succeeded'
+    } else {
+        res.error = true;
+        res.message = "Not sufficient permission";
+    };
+    return res;
 });
 
 Parse.Cloud.define(

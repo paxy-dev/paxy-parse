@@ -18,7 +18,7 @@ describe("Test Subject", () => {
         user.set("password", "admin");
         await user.signUp(null, { useMasterKey: true });
 
-        var admin = new Parse.ACL();
+        const admin = new Parse.ACL();
         admin.setPublicReadAccess(false);
         admin.setPublicWriteAccess(false);
         admin.setRoleReadAccess("Admin", true);

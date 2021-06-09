@@ -188,13 +188,19 @@ class MenuCodeGenerator {
 
 class AppCodeGenerator {
     constructor(dir) {
-        this.dir = dir;
-    }
+        let tmpdir = dir;
+        if (!dir) {
+            tmpdir = path.join(os.tmpdir(), 'paxy_deploy_dst')
+        }
+        this.dir = tmpdir;
+    }   
 
     create(tableData) {
         if (fs.existsSync(this.dir)) {
             fs.rmdirSync(this.dir, { recursive: true });
         }
+
+        console.log(this.dir)
 
         fs.mkdirSync(this.dir);
 
@@ -232,6 +238,10 @@ class AppCodeGenerator {
             default:
                 throw Error(`Invalid deploy type: ${type}`);
         }
+    }
+
+    clean() {
+        fs.rmdirSync(this.dir, { recursive: true });
     }
 }
 
