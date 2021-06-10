@@ -10,7 +10,7 @@
     All config variables need to be referenced through this module rather than reading through process.env for example.
 */
 
-const jwk = require("../keys/jwk.json");
+// const jwk = require("../keys/jwk.json");
 
 let envSource;
 if (process.env.NODE_ENV !== "production") {
@@ -49,7 +49,7 @@ config.database = {
 };
 
 config.auth = {
-    jwks: jwk.keys,
+    // jwks: jwk.keys,
     client_app_ids: envSource.CLIENT_APP_IDS.split(","),
     user_pool_ids: envSource.USER_POOL_IDS.split(","),
     api_admin_user: envSource.API_ADMIN_USER,
